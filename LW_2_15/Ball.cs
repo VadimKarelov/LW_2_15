@@ -20,7 +20,7 @@ namespace LW_2_15
         {
             X = x;
             Y = y;
-            Radius = rn.Next(5, 20);
+            Radius = rn.Next(40, 70);
             Color = System.Drawing.Color.FromArgb(rn.Next(0, 255), rn.Next(0, 255), rn.Next(0, 255));
 
             _rn = rn;
