@@ -12,7 +12,7 @@ namespace LW_2_15
         public int X { get; private set; }
         public int Y { get; private set; }
         public int Radius { get; private set; }
-        public System.Drawing.Color Color { get; private set; }
+        public System.Drawing.Color Color { get; set; }
 
         private Random _rn;
 
@@ -30,9 +30,10 @@ namespace LW_2_15
         {
             while (true)
             {
-                X += _rn.Next(-1, 2);
-                Y += _rn.Next(-1, 2);
+                X += _rn.Next(-1, 2) * _rn.Next(1, 5);
+                Y += _rn.Next(-1, 2) * _rn.Next(1, 5);
                 Thread.Sleep(1);
+                Thread.Yield();
             }
         }
     }

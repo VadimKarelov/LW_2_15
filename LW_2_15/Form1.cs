@@ -20,27 +20,12 @@ namespace LW_2_15
         public Form1()
         {
             InitializeComponent();
-            //for (int i = 0; i < 100; i++)
-            //CreateBall();
-            CreateBall();
             UpdateTrackBars();
         }
 
         private void Draw_Tick(object sender, EventArgs e)
         {
-            Bitmap bitmap = new Bitmap(pb_Field.Width, pb_Field.Height);
-            Graphics g = Graphics.FromImage(bitmap);
-
-            g.Clear(Color.White);
-            for (int i = 0; i < balls.Count; i++)
-            {
-                Ball b = balls[i];
-                g.FillEllipse(new SolidBrush(b.Color), b.X - b.Radius / 2, b.Y - b.Radius / 2, b.Radius, b.Radius);
-                g.DrawString((i + 1).ToString(), new Font("Times", 14), new SolidBrush(Color.Black), b.X, b.Y);
-            }
-            g.DrawString($"{balls.Count.ToString()}", new Font("Times", 10), new SolidBrush(Color.Black), 0, 0);
-
-            pb_Field.Image = bitmap;
+            Draw();
         }
 
         private void CreateBall_Tick(object sender, EventArgs e)
@@ -51,9 +36,42 @@ namespace LW_2_15
             rn = new Random();
         }
 
+        private void Draw()
+        {
+            Bitmap bitmap = new Bitmap(pb_Field.Width, pb_Field.Height);
+            Graphics g = Graphics.FromImage(bitmap);
+
+            g.Clear(Color.White);
+            for (int i = 0; i < balls.Count; i++)
+            {
+                Ball b = balls[i];
+
+                var tempColor = b.Color;
+
+                if (cb_Priority.Checked)
+                {
+                    switch (threads[i].Priority)
+                    {
+                        case ThreadPriority.Highest: tempColor = Color.Red; break;
+                        case ThreadPriority.AboveNormal: tempColor = Color.Orange; break;
+                        case ThreadPriority.Normal: tempColor = Color.Yellow; break;
+                        case ThreadPriority.BelowNormal: tempColor = Color.YellowGreen; break;
+                        case ThreadPriority.Lowest: tempColor = Color.Green; break;
+                    }
+                }
+
+                g.FillEllipse(new SolidBrush(tempColor), b.X - b.Radius / 2, b.Y - b.Radius / 2, b.Radius, b.Radius);
+                g.DrawString((i + 1).ToString(), new Font("Times", 14), new SolidBrush(Color.Black), b.X, b.Y);
+            }
+            g.DrawString($"{balls.Count.ToString()}", new Font("Times", 10), new SolidBrush(Color.Black), 0, 20);
+
+            pb_Field.Image = bitmap;
+        }
+
         private void CreateBall()
         {
-            Ball ball = new Ball(rn.Next(pb_Field.Width), rn.Next(pb_Field.Height), rn);
+            TrackBar tb = new TrackBar();
+            Ball ball = new Ball(rn.Next(pb_Field.Width - tb.Width), rn.Next(pb_Field.Height), rn);
             balls.Add(ball);
             Thread thread = new Thread(new ThreadStart(ball.Update));
             threads.Add(thread);
@@ -63,9 +81,10 @@ namespace LW_2_15
 
         private void DeleteBadBalls()
         {
+            TrackBar tb = new TrackBar();
             for (int i = balls.Count - 1; i >= 0; i--)
             {
-                if (balls[i].X < 0 || balls[i].Y < 0 || balls[i].X > pb_Field.Width || balls[i].Y > pb_Field.Height)
+                if (balls[i].X < 0 || balls[i].Y < 0 || balls[i].X > pb_Field.Width - tb.Width || balls[i].Y > pb_Field.Height)                
                 {
                     balls.RemoveAt(i);
                     threads.RemoveAt(i);
@@ -75,7 +94,27 @@ namespace LW_2_15
 
         private void UpdateTrackBars()
         {
-            //gb_Priority.Controls.Clear();
+            CorrectTrackBarNumber();
+
+            // changing values
+            ThreadPriority[] t = { ThreadPriority.Lowest, ThreadPriority.BelowNormal, ThreadPriority.Normal, ThreadPriority.AboveNormal, ThreadPriority.Highest };
+            List<ThreadPriority> states = t.ToList();
+
+            var trackBars = gb_Priority.Controls;
+            var labels = gb_Numbers.Controls;
+            for (int i = 0; i < balls.Count; i++)
+            {
+                ((TrackBar)trackBars[i]).Value = states.IndexOf(threads[i].Priority) + 1;
+                ((TrackBar)trackBars[i]).Tag = i;
+                ((TrackBar)trackBars[i]).Location = new Point(0, i * ((TrackBar)trackBars[i]).Height);
+
+                ((Label)labels[i]).Text = (i + 1).ToString();
+                ((Label)labels[i]).Location = new Point(0, i * ((TrackBar)trackBars[i]).Height);
+            }
+        }
+
+        private void CorrectTrackBarNumber()
+        {
             // add extra TBs
             while (gb_Priority.Controls.Count < balls.Count)
             {
@@ -86,26 +125,20 @@ namespace LW_2_15
                 sb.Value = 3;
                 sb.Scroll += TrackBar_Scroll;
                 gb_Priority.Controls.Add(sb);
+
+                Label lbl = new Label();
+                lbl.Text = "0";
+                lbl.Font = new Font("Times", 14);
+                gb_Numbers.Controls.Add(lbl);
             }
 
             // remove extra TBs
             while (gb_Priority.Controls.Count > balls.Count)
             {
                 gb_Priority.Controls.RemoveAt(0);
+                gb_Numbers.Controls.RemoveAt(0);
             }
-
-            // changing values
-            ThreadPriority[] t = { ThreadPriority.Lowest, ThreadPriority.BelowNormal, ThreadPriority.Normal, ThreadPriority.AboveNormal, ThreadPriority.Highest };
-            List<ThreadPriority> states = t.ToList();
-
-            var trackBars = gb_Priority.Controls;
-            for (int i = 0; i < balls.Count; i++)
-            {
-                ((TrackBar)trackBars[i]).Value = states.IndexOf(threads[i].Priority) + 1;
-                ((TrackBar)trackBars[i]).Tag = i;
-                ((TrackBar)trackBars[i]).Location = new Point(0, i * ((TrackBar)trackBars[i]).Height);
-            }
-         }
+        }
 
         private void TrackBar_Scroll(object sender, EventArgs e)
         {
