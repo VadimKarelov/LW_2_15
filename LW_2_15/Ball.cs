@@ -33,7 +33,7 @@ namespace LW_2_15
                 X += _rn.Next(-1, 2) * _rn.Next(1, 5);
                 Y += _rn.Next(-1, 2) * _rn.Next(1, 5);
                 Thread.Sleep(1);
-                Thread.Yield();
+                //Thread.Yield();
             }
         }
     }

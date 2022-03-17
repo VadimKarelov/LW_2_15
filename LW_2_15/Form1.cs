@@ -42,7 +42,7 @@ namespace LW_2_15
             Graphics g = Graphics.FromImage(bitmap);
 
             g.Clear(Color.White);
-            for (int i = 0; i < balls.Count; i++)
+            for (int i = balls.Count - 1; i >= 0; i--)
             {
                 Ball b = balls[i];
 
